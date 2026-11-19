@@ -14,7 +14,7 @@ their calibrated ratings. Written from scratch — no copied engine code.
 - **Board:** 0x88, incremental Zobrist hashing, make/unmake with full state
   restore (castling rights, en passant, halfmove clock, non-pawn material).
 - **Search:** negamax alpha-beta with iterative deepening to a fixed
-  50,000-node budget per move (never a clock, so replays are byte-identical),
+  40,000-node budget per move (never a clock, so replays are byte-identical),
   quiescence search (captures + promotions, all evasions in check),
   null-move pruning (R=3, only when non-pawn material > 2000 and not in
   check), transposition table with mate-distance adjustment, killer +
@@ -28,7 +28,7 @@ their calibrated ratings. Written from scratch — no copied engine code.
 
 ## Packing
 
-`main.py` (3,820 bytes) is the engine minified (8,847 bytes) and
+`main.py` (3,802 bytes) is the engine minified (8,847 bytes) and
 lzma-compressed, stored as raw latin-1 characters inside a string literal.
 The readable source, tests (perft verified against python-chess: start
 20/400/8902/197281, kiwipete 48/2039/97862) and packer live outside this
@@ -43,10 +43,12 @@ repository to keep the entry tree under the 8 KB cap.
 | 0c | 50k nodes + null-move, TT persisted | 3W 1D 2L | ~1,365–1,370 |
 
 Trial 0c matches the house baseline mean (sunfish 4k, ~1,365 Elo on 6-game
-practice trials). Max think time 8.3 s per move (limit 10 s) — the 50k
-budget is the safe point on a throttled CPU: 100k nodes exceeds the move
-limit when the CPU throttles to ~9–13k nodes/s.
+practice trials). Trial 1 (same settings, different openings) scored
+1,279. Max think time 8.6 s per move at the 50k budget (limit 10 s) — the
+budget was cut to 40k nodes for time safety: depth 4 in the middlegame
+completes at ~25k nodes, so 40k loses almost nothing versus 50k while
+worst-case think drops ~20%.
 
 ## Files
 
-- `main.py` — the entry (3,820 bytes)
+- `main.py` — the entry (3,802 bytes)
