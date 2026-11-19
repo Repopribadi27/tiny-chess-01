@@ -4,10 +4,10 @@
 [![rank](https://make.fun/badge/tiny-chess-01/repopribadi27/tiny-chess-01/rank.svg)](https://make.fun/bounty/tiny-chess-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01)
 [![reward](https://make.fun/badge/tiny-chess-01/repopribadi27/tiny-chess-01/reward.svg)](https://make.fun/bounty/tiny-chess-01?utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01)
 
-A chess engine that fits in 4,096 bytes of Python and plays the make.fun
-tiny-chess-01 gauntlet: 8 games per trial against a fixed ladder of house
-engines (alpha-beta depths 2–4 and 100k–2M nodes), rated by Elo anchored to
-their calibrated ratings. Written from scratch — no copied engine code.
+A chess engine that fits in 4,096 bytes of Python for the make.fun
+tiny-chess-01 gauntlet: 8 games per trial against house engines (alpha-beta
+depths 2–4 and 100k–2M nodes), rated by Elo anchored to their calibrated
+ratings. Written from scratch — no copied engine code.
 
 ## Design
 
@@ -29,25 +29,29 @@ their calibrated ratings. Written from scratch — no copied engine code.
 ## Packing
 
 `main.py` (3,802 bytes) is the engine minified (8,847 bytes) and
-lzma-compressed, stored as raw latin-1 characters inside a string literal.
-The readable source, tests (perft verified against python-chess: start
-20/400/8902/197281, kiwipete 48/2039/97862) and packer live outside this
-repository to keep the entry tree under the 8 KB cap.
+lzma-compressed, stored as raw latin-1 characters in a string literal.
+Readable source, tests (perft vs python-chess: start 20/400/8902/197281,
+kiwipete 48/2039/97862) and packer live outside this repo to keep the entry
+tree under the 8 KB cap.
 
 ## Measured strength (local env server, practice trials, 6 games)
 
-| Trial | Settings | Result | Elo ≈ |
-|-------|----------|--------|-------|
+| Trial | Settings | Result | Elo |
+|-------|----------|--------|-----|
 | 0 | 30k nodes, no null-move, TT cleared/move | 2W 0D 4L | ~1,100 |
 | 0b | 100k nodes, TT persisted | 0W 0D 5L (all by time) | — |
-| 0c | 50k nodes + null-move, TT persisted | 3W 1D 2L | ~1,365–1,370 |
+| 0c | 50k nodes + null-move, TT persisted | 3W 1D 2L | ~1,365 |
+| 1 | 50k nodes + null-move (packed main.py) | 3W 0D 3L | 1,279 |
+| 2 | 40k nodes + null-move (packed main.py) | 3W 2D 1L | 1,451 |
 
-Trial 0c matches the house baseline mean (sunfish 4k, ~1,365 Elo on 6-game
-practice trials). Trial 1 (same settings, different openings) scored
-1,279. Max think time 8.6 s per move at the 50k budget (limit 10 s) — the
-budget was cut to 40k nodes for time safety: depth 4 in the middlegame
-completes at ~25k nodes, so 40k loses almost nothing versus 50k while
-worst-case think drops ~20%.
+Trials 1–2 are scorer-computed; trial 2 beat the nodes-500k house engine.
+Mean of the two scorer trials is 1,365 — level with the house baseline
+(sunfish 4k, ~1,365 Elo on 6-game practice trials), so the entry is
+competitive with the baseline but not yet clearly above it. Max think time
+9.0 s per move at 40k (limit 10 s, mean 2.4 s); the 100k budget lost every
+game on time when the CPU throttled to ~9–13k nodes/s, which is why the
+budget is fixed at 40k: depth 4 in the middlegame completes at ~25k nodes,
+so 40k loses almost nothing versus 50k.
 
 ## Files
 
