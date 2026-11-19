@@ -17,42 +17,35 @@ ratings. Written from scratch — no copied engine code.
   40,000-node budget per move (never a clock, so replays are byte-identical),
   quiescence search (captures + promotions, all evasions in check),
   null-move pruning (R=3, only when non-pawn material > 2000 and not in
-  check), transposition table with mate-distance adjustment, killer +
-  history move ordering, MVV-LVA captures, repetition detection.
+  check), late-move reductions with null-window re-search, transposition
+  table with mate-distance adjustment, killer + history ordering, MVV-LVA
+  captures, repetition detection.
 - **Evaluation:** material (100/320/330/500/900) + piece-square tables
-  generated from compact formulas (pawn advance, centre bonuses, rook 7th
-  rank, king middlegame/endgame blend) + bishop pair (+30).
+  from compact formulas (pawn advance, centre bonuses, rook 7th rank, king
+  middlegame/endgame blend) + bishop pair (+30) + passed-pawn bonuses
+  (up to +110 on the 7th rank).
 - **Determinism:** every move derives only from the position, the game
   history, and the trial seed. No randomness at play time, no network calls
   except the env API, no wall-clock use in search.
 
 ## Packing
 
-`main.py` (3,802 bytes) is the engine minified (8,847 bytes) and
+`main.py` (3,960 bytes) is the engine minified (9,226 bytes) and
 lzma-compressed, stored as raw latin-1 characters in a string literal.
 Readable source, tests (perft vs python-chess: start 20/400/8902/197281,
 kiwipete 48/2039/97862) and packer live outside this repo to keep the entry
 tree under the 8 KB cap.
 
-## Measured strength (local env server, practice trials, 6 games)
+## Measured strength
 
-| Trial | Settings | Result | Elo |
-|-------|----------|--------|-----|
-| 0 | 30k nodes, no null-move, TT cleared/move | 2W 0D 4L | ~1,100 |
-| 0b | 100k nodes, TT persisted | 0W 0D 5L (all by time) | — |
-| 0c | 50k nodes + null-move, TT persisted | 3W 1D 2L | ~1,365 |
-| 1 | 50k nodes + null-move (packed main.py) | 3W 0D 3L | 1,279 |
-| 2 | 40k nodes + null-move (packed main.py) | 3W 2D 1L | 1,451 |
-
-Trials 1–2 are scorer-computed; trial 2 beat the nodes-500k house engine.
-Mean of the two scorer trials is 1,365 — level with the house baseline
-(sunfish 4k, ~1,365 Elo on 6-game practice trials), so the entry is
-competitive with the baseline but not yet clearly above it. Max think time
-9.0 s per move at 40k (limit 10 s, mean 2.4 s); the 100k budget lost every
-game on time when the CPU throttled to ~9–13k nodes/s, which is why the
-budget is fixed at 40k: depth 4 in the middlegame completes at ~25k nodes,
-so 40k loses almost nothing versus 50k.
+Practice trials on the local env server (6 games each, scorer-computed):
+trial 1 (50k nodes) 3W 0D 3L, Elo 1,279; trial 2 (40k nodes) 3W 2D 1L,
+Elo 1,451 — mean 1,365, level with the house baseline (sunfish 4k).
+The v2 engine (LMR + passed pawns) was validated by 20-game self-play
+against v1 before submission; see the build log for the numbers. Max think
+9.0 s per move at 40k nodes (limit 10 s); the 100k budget lost every game
+on time when the CPU throttled, which is why the budget is fixed at 40k.
 
 ## Files
 
-- `main.py` — the entry (3,802 bytes)
+- `main.py` — the entry (3,960 bytes)
